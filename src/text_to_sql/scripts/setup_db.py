@@ -113,7 +113,7 @@ def create_database(config):
             logger.info(f"Database '{db_name}' already exists")
             
             # Drop if force flag is set
-            if config.get("force", False):
+            if getattr(config, "force", False):
                 logger.info(f"Force flag set, dropping database '{db_name}'")
                 cursor.execute(f"DROP DATABASE IF EXISTS {db_name}")
                 logger.info(f"Database '{db_name}' dropped")
@@ -142,12 +142,12 @@ def load_adventureworks_data(config):
     Returns:
         True if data was loaded successfully, False otherwise
     """
-    db_host = config["host"]
-    db_port = config["port"]
-    db_user = config["user"]
-    db_password = config["password"]
-    db_name = config["dbname"]
-    data_path = config.get("data_path")
+    db_host = config.host
+    db_port = config.port
+    db_user = config.user
+    db_password = config.password
+    db_name = config.dbname
+    data_path = config.data_path
     
     if not data_path or not os.path.exists(data_path):
         logger.error(f"Data file not found at {data_path}")

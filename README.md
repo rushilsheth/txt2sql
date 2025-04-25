@@ -210,7 +210,16 @@ A robust natural language interface for SQL databases that handles schema change
 ### Prerequisites
 
 - Python 3.10 or higher
-- PostgreSQL 15 or higher
+- PostgreSQL 15 or higher, including the psql client
+  - On macOS, you can install the psql client via Homebrew:
+    ```
+    brew install libpq
+    brew link --force libpq
+    echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
+    ```
+    Alternatively, add `/opt/homebrew/opt/libpq/bin` to your PATH.
+- Docker
+  - Install [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop)
 - Make (optional, for convenience commands)
 - Poetry for dependency management
 
