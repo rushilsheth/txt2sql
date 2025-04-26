@@ -2,15 +2,20 @@
 Text-to-SQL Package
 
 This package provides a framework for handling natural language queries to SQL databases,
-with visualization capabilities. It's built with a focus on extensibility,
-allowing for different database backends and semantic understanding of user queries.
+with visualization capabilities.
 """
+
+# IMPORTANT: Set up logging before any other imports.
+from text_to_sql.config import load_config, setup_logging
+# Load a minimal configuration (or defaults) and configure logging immediately.
+# (You can adjust 'None' to a default config dictionary if available)
+_config = load_config(None)
+setup_logging(_config)
 
 import logging
 import os
 from typing import Any, Dict, Optional
 
-from text_to_sql.config import load_config, setup_logging
 from text_to_sql.db.base import DatabaseManager
 from text_to_sql.db.postgres import PostgresDatabaseManager
 from text_to_sql.llm.engine import LLMEngine
@@ -42,10 +47,10 @@ def create_app(config_path: Optional[str] = None, use_agents: bool = True) -> Da
     # Load configuration
     config = load_config(config_path)
     
-    # Set up logging
+    # (Re)configure logging if needed (setup_logging has already been called early).
     setup_logging(config)
     
-    # Get logger
+    # Get logger - now this logger uses our StructuredLogger
     logger = logging.getLogger(__name__)
     
     # Log startup with structured data
@@ -79,15 +84,15 @@ def run_app(config_path: Optional[str] = None, use_agents: bool = True):
         config_path: Path to the configuration file
         use_agents: Whether to use the agent-based approach
     """
-    # Get logger
+    # Load configuration and reconfigure (if needed)
+    config = load_config(config_path)
+    setup_logging(config)
+    
     logger = logging.getLogger(__name__)
     
     try:
         # Create and initialize the application
         app = create_app(config_path, use_agents)
-        
-        # Load configuration
-        config = load_config(config_path)
         
         # Launch the dashboard
         app.launch(
