@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./.cache:/app/.cache
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./config.yaml:/app/config.yaml
+    environment:
+      - TEXTTOSQL_CONFIG=/app/config.yaml
+      - TEXTTOSQL_DATABASE_HOST=db
+      - TEXTTOSQL_DATABASE_PORT=5432
+      - TEXTTOSQL_DATABASE_USER=${TEXTTOSQL_DATABASE_USER}
+      - TEXTTOSQL_DATABASE_PASSWORD=${TEXTTOSQL_DATABASE_PASSWORD}
+      - TEXTTOSQL_DATABASE_DBNAME=${TEXTTOSQL_DATABASE_DBNAME:-adventureworks}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${TEXTTOSQL_DATABASE_USER}
+      - POSTGRES_PASSWORD=${TEXTTOSQL_DATABASE_PASSWORD}
+      - POSTGRES_DB=${TEXTTOSQL_DATABASE_DBNAME:-adventureworks}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TEXTTOSQL_DATABASE_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  setup:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./config.yaml:/app/config.yaml
+    environment:
+      - TEXTTOSQL_CONFIG=/app/config.yaml
+      - TEXTTOSQL_DATABASE_HOST=db
+      - TEXTTOSQL_DATABASE_PORT=5432
+      - TEXTTOSQL_DATABASE_USER=${TEXTTOSQL_DATABASE_USER}
+      - TEXTTOSQL_DATABASE_PASSWORD=${TEXTTOSQL_DATABASE_PASSWORD}
+      - TEXTTOSQL_DATABASE_DBNAME=${TEXTTOSQL_DATABASE_DBNAME:-adventureworks}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      bash -c "
+        python -m src.text_to_sql.scripts.download_data &&
+        python -m src.text_to_sql.scripts.setup_db
+      "
+    restart: on-failure
+
+volumes:
+  postgres_data:

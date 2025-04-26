@@ -1,0 +1,78 @@
+# Text-to-SQL Application Configuration
+
+# Database configuration
+database:
+  type: postgres
+  host: localhost
+  port: 5432
+  dbname: adventureworks
+  user: "${TEXTTOSQL_DATABASE_USER}"
+  password: "${TEXTTOSQL_DATABASE_PASSWORD}"
+  min_connections: 1
+  max_connections: 5
+
+# LLM configuration
+llm:
+  model: gpt-4o  # Options: gpt-4o, gpt-4-turbo, gpt-3.5-turbo, etc.
+  api_key: null  # Set your API key here or use environment variable OPENAI_API_KEY
+  temperature: 0.0
+  timeout: 30
+  max_tokens: 1024
+
+# Application configuration
+app:
+  title: "Text-to-SQL Interface"
+  description: "Ask questions about your data in natural language"
+  theme: default
+  debug_mode: false
+  use_semantic_engine: true
+  host: 0.0.0.0
+  port: 7860
+  share: false  # Set to true to create a public link
+
+# Agent configuration
+agent:
+  max_iterations: 5
+  auto_fix_errors: true
+  use_dynamic_coordinator: false  # Set to true to use the dynamic coordinator
+  query_understanding:
+    use_examples: true
+    max_tokens: 512
+  schema_analysis:
+    table_limit: 10
+    column_limit: 20
+  sql_generation:
+    temperature: 0.0
+    max_tokens: 1024
+  query_validation:
+    temperature: 0.0
+    auto_fix: true
+  result_explanation:
+    temperature: 0.2
+    max_tokens: 512
+  visualization:
+    temperature: 0.0
+    max_tokens: 512
+  coordinator:
+    use_fixed_pipeline: true
+    # Dynamic coordinator specific settings
+    model: "gpt-4o" 
+    temperature: 0.0
+    use_reflection: true
+    reflection_frequency: 2  # Reflect every N iterations
+
+# Logging configuration
+logging:
+  level: INFO               # Options: TRACE, DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "text_to_sql_{timestamp}.log"  # Use {timestamp} for unique filenames
+  directory: "logs"
+  colored: true             # Colored output in terminal
+  structured: true          # Enable structured logging
+  json: false               # Output logs as JSON in console
+  json_file: true           # Output logs as JSON in file
+  component_levels:         # Set log levels for specific components
+    text_to_sql.db: INFO
+    text_to_sql.llm: INFO
+    text_to_sql.agent: DEBUG
+    text_to_sql.visualization: INFO
