@@ -103,7 +103,6 @@ class Dashboard:
                 db_manager=self.db_manager,
                 llm_engine=self.llm_engine,
                 agent_config=self.agent_config.to_dict(),
-                theme=self.app_config.theme,
                 debug_mode=self.debug_mode,
                 app_config=self.app_config
             )

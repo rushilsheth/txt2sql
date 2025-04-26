@@ -84,9 +84,9 @@ start-db:
 	@if ! docker ps --format '{{.Names}}' | grep -q '^$(POSTGRES_CONTAINER)$$'; then \
 		echo "Starting Postgres container …"; \
 		docker run --name $(POSTGRES_CONTAINER) \
-			-e POSTGRES_USER=postgres \
-			-e POSTGRES_PASSWORD=postgres \
-			-e POSTGRES_DB=adventureworks \
+			-e POSTGRES_USER=$(TEXTTOSQL_DATABASE_USER) \
+			-e POSTGRES_PASSWORD=$(TEXTTOSQL_DATABASE_PASSWORD) \
+			-e POSTGRES_DB=$(TEXTTOSQL_DATABASE_DBNAME) \
 			-p $(POSTGRES_PORT):5432 \
 			-v postgres_data:/var/lib/postgresql/data \
 			-d $(POSTGRES_IMAGE); \
