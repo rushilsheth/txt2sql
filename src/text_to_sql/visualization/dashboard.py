@@ -130,7 +130,7 @@ class Dashboard:
         
         # Build the app interface
         if hasattr(self.app, 'build_app'):
-            self.app.build_app()
+             self.app.build_app()
         
         return self
     

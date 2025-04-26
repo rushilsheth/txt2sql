@@ -187,17 +187,20 @@ class AgentBasedTextToSQLApp:
                                     context_output = gr.JSON(label="Agent Context")
             
             # Define event handlers
+            # Build outputs list conditionally
+            outputs = [
+                sql_output, results_output, explanation_output, 
+                status_output, x_column, y_column, color_column, 
+                viz_type
+            ]
+            if self.debug_mode:
+                outputs.extend([reasoning_output, timing_output, context_output])
+            outputs.append(viz_output)
+
             submit_btn.click(
                 fn=self.handle_query,
                 inputs=[query_input],
-                outputs=[
-                    sql_output, results_output, explanation_output, 
-                    status_output, x_column, y_column, color_column,
-                    viz_type, reasoning_output if self.debug_mode else None,
-                    timing_output if self.debug_mode else None,
-                    context_output if self.debug_mode else None,
-                    viz_output
-                ]
+                outputs=outputs
             )
             
             execute_btn.click(

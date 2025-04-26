@@ -80,7 +80,7 @@ POSTGRES_PORT      := 5432
 .PHONY: start-db stop-db
 
 # Run a detached Postgres container if it isn’t already running
-start-db:
+start-db:CREATE DATABASE new_database_name WITH OWNER your_username;
 	@if ! docker ps --format '{{.Names}}' | grep -q '^$(POSTGRES_CONTAINER)$$'; then \
 		echo "Starting Postgres container …"; \
 		docker run --name $(POSTGRES_CONTAINER) \
