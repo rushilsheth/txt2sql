@@ -52,13 +52,11 @@ class LLMEngine:
         self.max_tokens = max_tokens
         self.db_manager = db_manager
         
-        # Set API key if provided
-        if api_key:
-            openai.api_key = api_key
-        
         # Validate API key
         if not openai.api_key:
             logger.warning("OpenAI API key not set. Please set it using the api_key parameter or environment variable.")
+        
+        self.client = openai.OpenAI()
     
     def set_db_manager(self, db_manager: DatabaseManager):
         """
@@ -181,7 +179,7 @@ class LLMEngine:
             The LLM response text
         """
         try:
-            response = openai.chat.completions.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=self.temperature,
