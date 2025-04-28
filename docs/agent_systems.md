@@ -66,7 +66,6 @@ The system provides two types of coordinator agents:
    - Uses OpenAI function calling for decision-making
    - Decides which agent to invoke based on context
    - Includes self-reflection capability
-   - More adaptable but requires OpenAI API access
 
 ## Agent Context
 
