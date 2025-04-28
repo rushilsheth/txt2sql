@@ -42,6 +42,31 @@ run:
 	@echo "Running the application..."
 	$(PYTHON) -m text_to_sql --config $(CONFIG_FILE)
 
+# Run with standard (non-agent) approach
+standard:
+	@echo "Running the application with standard approach..."
+	$(PYTHON) -m text_to_sql --standard --config $(CONFIG_FILE)
+
+# Run with dynamic coordinator
+dynamic:
+	@echo "Running the application with dynamic coordinator..."
+	$(PYTHON) -m text_to_sql --dynamic --config $(CONFIG_FILE)
+
+# Run in debug mode
+debug:
+	@echo "Running the application in debug mode..."
+	$(PYTHON) -m text_to_sql --debug --config $(CONFIG_FILE)
+
+# Run with standard approach in debug mode
+standard-debug:
+	@echo "Running the application with standard approach in debug mode..."
+	$(PYTHON) -m text_to_sql --standard --debug --config $(CONFIG_FILE)
+
+# Run with dynamic coordinator in debug mode
+dynamic-debug:
+	@echo "Running the application with dynamic coordinator in debug mode..."
+	$(PYTHON) -m text_to_sql --dynamic --debug --config $(CONFIG_FILE)
+
 # Run tests
 test:
 	@echo "Running tests..."
@@ -59,12 +84,18 @@ clean:
 	@echo "Cleanup complete"
 
 # Help information
+# Help information
 help:
-    @echo "Available targets:"
+	@echo "Available targets:"
 	@echo "  setup          - Install dependencies"
 	@echo "  download-data  - Download AdventureWorks sample data"
 	@echo "  setup-db       - Set up the database"
-	@echo "  run            - Run the application"
+	@echo "  run            - Run the application (agent-based with simple coordinator)"
+	@echo "  standard       - Run the application with standard (non-agent) approach"
+	@echo "  dynamic        - Run the application with dynamic coordinator"
+	@echo "  debug          - Run the application in debug mode"
+	@echo "  standard-debug - Run standard approach in debug mode"
+	@echo "  dynamic-debug  - Run dynamic coordinator in debug mode"
 	@echo "  test           - Run tests"
 	@echo "  clean          - Clean up temporary files"
 	@echo "  all            - Run setup, download-data, and setup-db"

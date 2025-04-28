@@ -95,22 +95,22 @@ class LLMQueryUnderstandingAgent(QueryUnderstandingAgent):
             Primary intent
         """
         prompt = f"""You are an expert in natural language understanding.
-Extract the primary intent from this database query:
+            Extract the primary intent from this database query:
 
-Query: "{query}"
+            Query: "{query}"
 
-Possible intents:
-- SELECT: Basic retrieval of data
-- AGGREGATE: Computing aggregates like count, sum, average, etc.
-- FILTER: Retrieving data with specific conditions
-- JOIN: Combining data from multiple tables
-- SORT: Ordering data
-- GROUP: Grouping and summarizing data
-- COMPLEX: Multiple operations combined
+            Possible intents:
+            - SELECT: Basic retrieval of data
+            - AGGREGATE: Computing aggregates like count, sum, average, etc.
+            - FILTER: Retrieving data with specific conditions
+            - JOIN: Combining data from multiple tables
+            - SORT: Ordering data
+            - GROUP: Grouping and summarizing data
+            - COMPLEX: Multiple operations combined
 
-Intent:"""
+            Intent:"""
         
-        response = self.llm_engine._call_llm(prompt)
+        response = self.llm_engine.call_llm(prompt)
         
         # Extract the intent from the response
         intent = response.strip().split("\n")[0]
@@ -133,18 +133,18 @@ Intent:"""
             List of entity names
         """
         prompt = f"""You are an expert in natural language understanding.
-Extract the database entities (tables, columns, values) from this query:
+            Extract the database entities (tables, columns, values) from this query:
 
-Query: "{query}"
+            Query: "{query}"
 
-List each entity as a simple name, with no explanation. Use the format:
-ENTITY_TYPE: entity_name
+            List each entity as a simple name, with no explanation. Use the format:
+            ENTITY_TYPE: entity_name
 
-Where ENTITY_TYPE is one of: TABLE, COLUMN, VALUE
+            Where ENTITY_TYPE is one of: TABLE, COLUMN, VALUE
 
-Entities:"""
+            Entities:"""
         
-        response = self.llm_engine._call_llm(prompt)
+        response = self.llm_engine.call_llm(prompt)
         
         # Extract entities from the response
         entities = []
@@ -264,7 +264,7 @@ class LLMSchemaAnalysisAgent(SchemaAnalysisAgent):
 
             Relevant Tables:"""
         
-        response = self.llm_engine._call_llm(prompt)
+        response = self.llm_engine.call_llm(prompt)
         
         # Extract table names from the response
         tables = []
@@ -333,7 +333,7 @@ class LLMSchemaAnalysisAgent(SchemaAnalysisAgent):
 
                 Relevant Columns:"""
             
-            response = self.llm_engine._call_llm(prompt)
+            response = self.llm_engine.call_llm(prompt)
             
             # Extract column names from the response
             columns = []
@@ -464,31 +464,31 @@ class LLMSQLGenerationAgent(SQLGenerationAgent):
         
         # Create the prompt
         prompt = f"""You are an expert SQL developer.
-Generate an SQL query for this request using the provided database schema.
+            Generate an SQL query for this request using the provided database schema.
 
-Query: "{context.user_query}"
+            Query: "{context.user_query}"
 
-Intent: {context.query_intent}
+            Intent: {context.query_intent}
 
-Database Type: {self.db_manager.get_database_type()}
+            Database Type: {self.db_manager.get_database_type()}
 
-Database Schema:
-{schema_str}
+            Database Schema:
+            {schema_str}
 
-{columns_context}
+            {columns_context}
 
-Guidelines:
-1. Only use tables and columns that are in the provided schema.
-2. Use appropriate JOIN operations when involving multiple tables.
-3. Handle NULL values appropriately.
-4. Use clear aliases for tables and columns when needed.
-5. For aggregate queries, include appropriate GROUP BY clauses.
-6. Focus on creating an efficient, readable query.
-7. Wrap the final SQL in a ```sql code block.
+            Guidelines:
+            1. Only use tables and columns that are in the provided schema.
+            2. Use appropriate JOIN operations when involving multiple tables.
+            3. Handle NULL values appropriately.
+            4. Use clear aliases for tables and columns when needed.
+            5. For aggregate queries, include appropriate GROUP BY clauses.
+            6. Focus on creating an efficient, readable query.
+            7. Wrap the final SQL in a ```sql code block.
 
-SQL Query:"""
+            SQL Query:"""
         
-        response = self.llm_engine._call_llm(prompt)
+        response = self.llm_engine.call_llm(prompt)
         
         # Extract the SQL query from the response
         sql_query = self.llm_engine._extract_sql_from_response(response)
@@ -614,34 +614,34 @@ class LLMQueryValidationAgent(QueryValidationAgent):
         
         # Create the prompt
         prompt = f"""You are an expert SQL developer.
-Fix this invalid SQL query to make it work correctly.
+            Fix this invalid SQL query to make it work correctly.
 
-Original Query: "{context.user_query}"
+            Original Query: "{context.user_query}"
 
-Generated SQL:
-```sql
-{context.sql_query}
-```
+            Generated SQL:
+            ```sql
+            {context.sql_query}
+            ```
 
-Error: {context.result_error}
+            Error: {context.result_error}
 
-Database Type: {self.db_manager.get_database_type()}
+            Database Type: {self.db_manager.get_database_type()}
 
-Database Schema:
-{schema_str}
+            Database Schema:
+            {schema_str}
 
-Guidelines:
-1. Only use tables and columns that are in the provided schema.
-2. Use appropriate JOIN operations when involving multiple tables.
-3. Handle NULL values appropriately.
-4. Use clear aliases for tables and columns when needed.
-5. For aggregate queries, include appropriate GROUP BY clauses.
-6. Focus on creating an efficient, readable query.
-7. Wrap the final SQL in a ```sql code block.
+            Guidelines:
+            1. Only use tables and columns that are in the provided schema.
+            2. Use appropriate JOIN operations when involving multiple tables.
+            3. Handle NULL values appropriately.
+            4. Use clear aliases for tables and columns when needed.
+            5. For aggregate queries, include appropriate GROUP BY clauses.
+            6. Focus on creating an efficient, readable query.
+            7. Wrap the final SQL in a ```sql code block.
 
-Fixed SQL Query:"""
+            Fixed SQL Query:"""
         
-        response = self.llm_engine._call_llm(prompt)
+        response = self.llm_engine.call_llm(prompt)
         
         # Extract the SQL query from the response
         fixed_query = self.llm_engine._extract_sql_from_response(response)
@@ -730,25 +730,25 @@ class LLMResultExplanationAgent(ResultExplanationAgent):
         
         # Create the prompt
         prompt = f"""You are an expert data analyst.
-Explain these query results in a clear, concise way:
+            Explain these query results in a clear, concise way:
 
-Original Query: "{context.user_query}"
+            Original Query: "{context.user_query}"
 
-SQL Query:
-```sql
-{context.sql_query}
-```
+            SQL Query:
+            ```sql
+            {context.sql_query}
+            ```
 
-Query Results:
-{result_str}
+            Query Results:
+            {result_str}
 
-Explain what these results mean in relation to the original query.
-Be specific about key findings, patterns, or insights.
-Keep the explanation concise (3-5 sentences).
+            Explain what these results mean in relation to the original query.
+            Be specific about key findings, patterns, or insights.
+            Keep the explanation concise (3-5 sentences).
 
-Explanation:"""
+            Explanation:"""
         
-        response = self.llm_engine._call_llm(prompt)
+        response = self.llm_engine.call_llm(prompt)
         
         # Clean up the response
         explanation = response.strip()
@@ -850,48 +850,49 @@ class LLMVisualizationAgent(VisualizationAgent):
         
         # Create the prompt
         prompt = f"""You are an expert data visualization specialist.
-Suggest the most appropriate visualization for these query results:
+        Suggest the most appropriate visualization for these query results:
 
-Original Query: "{context.user_query}"
+        Original Query: "{context.user_query}"
 
-SQL Query:
-```sql
-{context.sql_query}
-```
+        SQL Query:
+        ```sql
+        {context.sql_query}
+        ```
 
-Available Columns: {columns_str}
+        Available Columns: {columns_str}
 
-Query Results:
-{result_str}
+        Query Results:
+        {result_str}
 
-Available Visualization Types:
-- Table: Simple tabular display
-- Bar Chart: Compare values across categories
-- Line Chart: Show trends over time or sequence
-- Scatter Plot: Show relationship between two variables
-- Heatmap: Show patterns in a matrix of values
+        Available Visualization Types:
+        - Table: Simple tabular display
+        - Bar Chart: Compare values across categories
+        - Line Chart: Show trends over time or sequence
+        - Scatter Plot: Show relationship between two variables
+        - Heatmap: Show patterns in a matrix of values
 
-For the chosen visualization, specify:
-1. Visualization type
-2. X-axis column (if applicable)
-3. Y-axis column (if applicable) 
-4. Color column (if applicable)
-5. Aggregation function (if applicable): Count, Sum, Average, Min, Max
+        For the chosen visualization, specify:
+        1. Visualization type
+        2. X-axis column (if applicable)
+        3. Y-axis column (if applicable) 
+        4. Color column (if applicable)
+        5. Aggregation function (if applicable): Count, Sum, Average, Min, Max
 
-Format your response as a JSON object with these keys:
-{{
-  "type": "...",
-  "x_column": "...",
-  "y_column": "...",
-  "color_column": "...",
-  "aggregation": "..."
-}}
+        Format your response as a JSON object with these keys:
+        {{
+        "type": "...",
+        "x_column": "...",
+        "y_column": "...",
+        "color_column": "...",
+        "aggregation": "..."
+        }}
 
-Only include key-value pairs that are applicable to the chosen visualization type.
+        Only include key-value pairs that are applicable to the chosen visualization type.
 
-JSON:"""
+        JSON:"""
         
-        response = self.llm_engine._call_llm(prompt)
+        # TODO: move to JSON extraction
+        response = self.llm_engine.call_llm(prompt)
         
         # Extract the JSON from the response
         import json

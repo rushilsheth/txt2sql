@@ -154,6 +154,19 @@ Important guidelines:
 - If there are errors in the SQL, invoke Query Validation
 - If Schema Analysis hasn't been done before SQL Generation, invoke Schema Analysis first
 - When all necessary agents have been invoked and the query has been executed successfully, finish the processing
+
+IMPORTANT REQUIREMENTS:
+1. The pipeline is not complete until ALL of these steps are done:
+   - Query has been understood
+   - Schema has been analyzed 
+   - SQL has been generated
+   - SQL has been validated
+   - Query has been executed
+   - Results have been explained
+   - Visualization has been suggested
+
+2. You must ALWAYS proceed to SQL Generation after Schema Analysis
+3. Never finish processing until a valid SQL query has been generated and executed
 """
 
 
@@ -288,12 +301,16 @@ class DynamicCoordinatorAgent(CoordinatorAgent):
         # Prepare the context for the prompt
         context_summary = self._format_context_for_prompt(context)
         
-        # Create the prompt
+        # Create the prompt with more explicit instructions
         user_prompt = f"""Current Context:
-{context_summary}
+    {context_summary}
 
-Based on this context, decide which agent should be invoked next, or if processing is complete.
-"""
+    Based on this context, decide which agent should be invoked next, or if processing is complete.
+    IMPORTANT: The pipeline is NOT complete until we have generated SQL, executed it successfully, and explained the results.
+    - If no SQL has been generated yet, you MUST select the SQL Generation agent
+    - If there's SQL but it hasn't been validated, select Query Validation
+    - Only mark the process as complete when we have executed the query and explained the results
+    """
         
         try:
             # Call OpenAI with function calling
@@ -306,7 +323,7 @@ Based on this context, decide which agent should be invoked next, or if processi
                 tools=[{"type": "function", "function": func} for func in AGENT_FUNCTIONS],
                 tool_choice="auto"
             )
-            
+        
             # Extract the function call
             if response.choices[0].message.tool_calls:
                 tool_call = response.choices[0].message.tool_calls[0]
@@ -377,7 +394,7 @@ Provide a brief reflection on the current state of processing.
         
         try:
             # Call the LLM
-            response = self.llm_engine._call_llm(reflection_prompt)
+            response = self.llm_engine.call_llm(reflection_prompt)
             
             # Log the reflection
             self.log_reasoning(context, f"Reflection: {response.strip()}")

@@ -27,8 +27,9 @@ Database Type: {db_type}
 {question}
 
 ## SQL Query
-Based on the database schema and natural language question, here's the SQL query:
-```sql
+Based on the database schema and natural language question, respond with the SQL query that answers the question in a JSON format.
+
+The json should contain: {'sql': 'your_sql_query_here'}
 """
 
 # Prompt for validating and repairing SQL
@@ -60,10 +61,8 @@ Please analyze the SQL query for errors and make corrections. Consider the follo
 5. Check for potential null handling issues
 6. Ensure the query correctly addresses the natural language question
 
-Return the corrected SQL query only, wrapped in a ```sql code block.
-
-## Corrected SQL Query
-```sql
+Return the corrected SQL query in a JSON format.
+The json should contain: {'sql': 'your_corrected_sql_query_here'}
 """
 
 # Prompt for extracting semantic information from the database schema

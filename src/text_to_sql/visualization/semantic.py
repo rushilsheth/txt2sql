@@ -89,7 +89,7 @@ class SemanticEngine:
         prompt = SCHEMA_SEMANTICS_PROMPT.format(schema=schema_str)
         
         # Call the LLM
-        response = self.llm_engine._call_llm(prompt)
+        response = self.llm_engine.call_llm(prompt)
         
         # Parse the semantic information
         semantics = self._parse_semantic_information(response)
@@ -128,7 +128,7 @@ class SemanticEngine:
         )
         
         # Call the LLM
-        response = self.llm_engine._call_llm(prompt)
+        response = self.llm_engine.call_llm(prompt)
         
         # Parse the query plan
         query_plan = self._parse_query_plan(response)

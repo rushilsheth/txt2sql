@@ -97,7 +97,7 @@ class LLMEngine:
         
         # Call the LLM
         start_time = time.time()
-        response = self._call_llm(prompt)
+        response = self.call_llm(prompt, json_response=True)
         generation_time = time.time() - start_time
         
         # Extract the SQL query from the response
@@ -157,7 +157,7 @@ class LLMEngine:
         )
         
         # Call the LLM
-        response = self._call_llm(prompt)
+        response = self.call_llm(prompt, json_response=True)
         
         # Extract the repaired SQL query from the response
         repaired_sql = self._extract_sql_from_response(response)
@@ -167,51 +167,19 @@ class LLMEngine:
         
         return repaired_sql, was_repaired
     
-    def _call_llm(self, prompt: str) -> str:
+    def _fallback_extract_sql_from_response(self, response: str) -> str:
         """
-        Call the language model with a prompt.
-        
-        Args:
-            prompt: The prompt to send to the LLM
-            
-        Returns:
-            The LLM response text
-        """
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-                timeout=self.timeout
-            )
-            return response.choices[0].message.content
-            
-        except Exception as e:
-            logger.error(f"Error calling LLM: {e}")
-            raise RuntimeError(f"Failed to generate SQL: {e}")
-    
-    def _extract_sql_from_response(self, response: str) -> str:
-        """
-        Extract SQL query from the LLM response.
-        
-        Args:
-            response: The raw LLM response
-            
-        Returns:
-            The extracted SQL query
+        Fallback method to extract SQL using original logic.
         """
         # Try to extract SQL from markdown code blocks
         sql_pattern = r"```sql\s*(.*?)\s*```"
         matches = re.findall(sql_pattern, response, re.DOTALL)
-        
         if matches:
             return matches[0].strip()
         
         # Try to extract from generic code blocks
         code_pattern = r"```\s*(.*?)\s*```"
         matches = re.findall(code_pattern, response, re.DOTALL)
-        
         if matches:
             return matches[0].strip()
         
@@ -226,7 +194,6 @@ class LLMEngine:
                 line.upper().startswith('(SELECT')):
                 sql_lines.append(line)
                 continue
-            
             # Add subsequent lines that might be part of the SQL query
             if sql_lines and (
                 line.upper().startswith('FROM') or
@@ -249,9 +216,47 @@ class LLMEngine:
         if sql_lines:
             return " ".join(sql_lines)
         
-        # If all else fails, return the entire response
         logger.warning("Could not extract SQL from response, returning entire response")
         return response
+
+    def _extract_sql_from_response(self, response: str) -> str:
+        """
+        Extract SQL query from the LLM response.
+        Attempts JSON parsing first before falling back to original logic.
+        """
+        try:
+            parsed = json.loads(response)
+            if 'sql' in parsed:
+                return parsed['sql'].strip()
+        except json.JSONDecodeError:
+            logger.debug("Response is not valid JSON, using fallback extraction.")
+        
+        return self._fallback_extract_sql_from_response(response)
+
+    def call_llm(self, prompt: str, json_response: bool = False) -> str:
+        """
+        Call the language model with a prompt, requesting a JSON response.
+        
+        Args:
+            prompt: The prompt to send to the LLM
+            
+        Returns:
+            The LLM response text
+        """
+        try:
+            response_format = "json_object" if json_response else "text"
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                timeout=self.timeout,
+                response_format={"type": response_format}
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.error(f"Error calling LLM: {e}")
+            raise RuntimeError(f"Failed to generate SQL: {e}")
     
     def _format_schema_for_prompt(self, schema: Dict[str, Any]) -> str:
         """
