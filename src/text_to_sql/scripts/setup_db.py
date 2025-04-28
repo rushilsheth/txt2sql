@@ -3,7 +3,7 @@
 Database Setup Script
 
 This script sets up the database for the text-to-SQL application.
-It creates the database if it doesn't exist and restores the AdventureWorks sample data.
+It downloads (if needed) and imports the AdventureWorks sample data.
 """
 
 import argparse
@@ -11,12 +11,14 @@ import logging
 import os
 import subprocess
 import sys
+import yaml
 from pathlib import Path
-
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from text_to_sql.config import load_config, setup_logging
+from download_data import download_file, ADVENTUREWORKS_URL
+# Import DatabaseConfig instead of working with raw dictionary config
+from text_to_sql.utils.config_types import DatabaseConfig
 
 # Set up logging
 logging.basicConfig(
@@ -25,230 +27,107 @@ logging.basicConfig(
 )
 logger = logging.getLogger("setup_db")
 
+
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Set up the AdventureWorks database")
     parser.add_argument(
-        "--config", 
+        "--config",
         help="Path to configuration file",
-        default=os.environ.get("TEXTTOSQL_CONFIG", None)
+        default="config.yaml"
     )
     parser.add_argument(
-        "--host", 
-        help="Database host",
-        default=None
+        "--skip-download", help="Skip downloading the data", action="store_true"
     )
-    parser.add_argument(
-        "--port", 
-        help="Database port",
-        type=int,
-        default=None
-    )
-    parser.add_argument(
-        "--user", 
-        help="Database user",
-        default=None
-    )
-    parser.add_argument(
-        "--password", 
-        help="Database password",
-        default=None
-    )
-    parser.add_argument(
-        "--database", 
-        help="Database name",
-        default=None
-    )
-    parser.add_argument(
-        "--data-path", 
-        help="Path to the AdventureWorks SQL file",
-        default=None
-    )
-    parser.add_argument(
-        "--skip-download", 
-        help="Skip downloading the data",
-        action="store_true"
-    )
-    parser.add_argument(
-        "--force", 
-        help="Force database recreation",
-        action="store_true"
-    )
-    
     return parser.parse_args()
 
-def create_database(config):
-    """
-    Create the database if it doesn't exist.
-    
-    Args:
-        config: Database configuration
-        
-    Returns:
-        True if database was created or already exists, False otherwise
-    """
-    db_host = config.host
-    db_port = config.port
-    db_user = config.user
-    db_password = config.password
-    db_name = config.dbname
-    
-    # Connect to the default database to create a new database
+
+def load_config(config_path):
+    with open(config_path, "r") as file:
+        # Read raw content and expand any environment variables
+        config_raw = file.read()
+        config_str = os.path.expandvars(config_raw)
+    return yaml.safe_load(config_str)
+
+
+def create_database(db_config: DatabaseConfig):
     try:
         conn = psycopg2.connect(
-            host=db_host,
-            port=db_port,
-            user=db_user,
-            password=db_password,
-            dbname="postgres"
+            dbname="postgres",  # connect to the default postgres database
+            user=db_config.user,
+            password=db_config.password,
+            host=db_config.host,
+            port=db_config.port
         )
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cursor = conn.cursor()
-        
-        # Check if database exists
-        cursor.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{db_name}'")
+        cursor.execute(f"SELECT 1 FROM pg_database WHERE datname='{db_config.dbname}'")
         exists = cursor.fetchone()
-        
-        if exists:
-            logger.info(f"Database '{db_name}' already exists")
-            
-            # Drop if force flag is set
-            if getattr(config, "force", False):
-                logger.info(f"Force flag set, dropping database '{db_name}'")
-                cursor.execute(f"DROP DATABASE IF EXISTS {db_name}")
-                logger.info(f"Database '{db_name}' dropped")
-                exists = False
-        
+
         if not exists:
-            # Create database
-            cursor.execute(f"CREATE DATABASE {db_name}")
-            logger.info(f"Database '{db_name}' created")
-        
+            cursor.execute(f"CREATE DATABASE {db_config.dbname}")
+            logger.info(f"Database {db_config.dbname} created.")
+        else:
+            logger.info(f"Database {db_config.dbname} already exists.")
+
         cursor.close()
         conn.close()
-        return True
-        
     except Exception as e:
         logger.error(f"Error creating database: {e}")
-        return False
+        sys.exit(1)
 
-def load_adventureworks_data(config):
-    """
-    Load the AdventureWorks sample data into the database.
-    
-    Args:
-        config: Database configuration
-        
-    Returns:
-        True if data was loaded successfully, False otherwise
-    """
-    db_host = config.host
-    db_port = config.port
-    db_user = config.user
-    db_password = config.password
-    db_name = config.dbname
-    data_path = config.data_path
-    
-    if not data_path or not os.path.exists(data_path):
-        logger.error(f"Data file not found at {data_path}")
-        return False
-    
+
+def import_data(db_config: DatabaseConfig, data_path):
     try:
-        # Set up environment variables for pg_restore
+        command = [
+            "psql",
+            "-h", db_config.host,
+            "-p", str(db_config.port),
+            "-U", db_config.user,
+            "-d", db_config.dbname,
+            "-f", data_path
+        ]
         env = os.environ.copy()
-        if db_password:
-            env["PGPASSWORD"] = db_password
-        
-        # Check if we're dealing with a SQL file or a dump file
-        if data_path.endswith(".sql"):
-            # Use psql for SQL files
-            cmd = [
-                "psql",
-                f"-h{db_host}",
-                f"-p{db_port}",
-                f"-U{db_user}",
-                f"-d{db_name}",
-                "-f", data_path
-            ]
-            logger.info(f"Loading AdventureWorks data using psql: {' '.join(cmd)}")
-            result = subprocess.run(cmd, env=env, capture_output=True, text=True)
-        else:
-            # Use pg_restore for dump files
-            cmd = [
-                "pg_restore",
-                f"-h{db_host}",
-                f"-p{db_port}",
-                f"-U{db_user}",
-                f"-d{db_name}",
-                "-v", data_path
-            ]
-            logger.info(f"Loading AdventureWorks data using pg_restore: {' '.join(cmd)}")
-            result = subprocess.run(cmd, env=env, capture_output=True, text=True)
-        
-        if result.returncode != 0:
-            logger.error(f"Error loading data: {result.stderr}")
-            return False
-        
-        logger.info("AdventureWorks data loaded successfully")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Error loading data: {e}")
-        return False
+        env["PGPASSWORD"] = db_config.password
+
+        # Set cwd to the directory containing the SQL file so any relative CSV references work
+        cwd = os.path.dirname(data_path)
+
+        result = subprocess.run(
+            command,
+            check=True,
+            env=env,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        logger.info("Data imported successfully")
+        logger.info(result.stdout.decode())
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to import data: {e}")
+        logger.error(e.stderr.decode())
+        sys.exit(1)
+
 
 def main():
-    """Main function to set up the database."""
     args = parse_args()
-    
-    # Load configuration
     config = load_config(args.config)
-    setup_logging(config)
+
+    # Use DatabaseConfig to parse the database section of the YAML config
+    db_config = DatabaseConfig.from_dict(config.get("database", {}))
+    # Convert relative data_path to an absolute path
+    data_path = os.path.abspath(config.get("data_path", os.path.join("data", "adventureworks.sql")))
     
-    # Override config with command line arguments
-    db_config = config.database
-    if args.host:
-        db_config.host = args.host
-    if args.port:
-        db_config.port = args.port
-    if args.user:
-        db_config.user = args.user
-    if args.password:
-        db_config.password = args.password
-    if args.database:
-        db_config.dbname = args.database
-    
-    # Add command line arguments to config
-    db_config.force = args.force
-    
-    # Download data if needed
     if not args.skip_download:
-        from download_data import download_adventureworks_data
-        data_path = args.data_path or os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "data", "adventureworks.sql"
-        )
-        if not download_adventureworks_data(data_path):
-            logger.error("Failed to download AdventureWorks data")
-            return 1
-        db_config.data_path = data_path
-    elif args.data_path:
-        db_config.data_path = args.data_path
-    else:
-        logger.error("No data path provided and download skipped")
-        return 1
-    
-    # Create database
-    if not create_database(db_config):
-        logger.error("Failed to create database")
-        return 1
-    
-    # Load data
-    if not load_adventureworks_data(db_config):
-        logger.error("Failed to load AdventureWorks data")
-        return 1
-    
-    logger.info("Database setup completed successfully")
-    return 0
+        download_file(ADVENTUREWORKS_URL, data_path)
+
+    if not os.path.exists(data_path):
+        logger.error(f"SQL file does not exist: {data_path}")
+        sys.exit(1)
+
+    create_database(db_config)
+    import_data(db_config, data_path)
+
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
