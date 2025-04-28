@@ -6,6 +6,8 @@
 
 A robust natural language interface for SQL databases that handles schema changes, provides semantic understanding, and visualizes query results.
 
+![Join Example](docs/join_example.png)
+
 ## Features
 
 - 🔍 **Natural Language Queries**: Convert plain English questions into SQL queries
