@@ -14,6 +14,7 @@ setup_logging(_config)
 
 import logging
 import os
+import sys
 from typing import Any, Dict, Optional
 
 from text_to_sql.db.base import DatabaseManager
@@ -53,16 +54,19 @@ def create_app(config_path: Optional[str] = None, use_agents: bool = True) -> Da
     # Get logger - now this logger uses our StructuredLogger
     logger = logging.getLogger(__name__)
     
+
+    # Dynamically create the concrete DatabaseManager based on configuration.
+    db_config = config.database
+    
     # Log startup with structured data
     logger.info(
         f"Creating Text-to-SQL application",
         tags={"component": "main", "action": "create_app", "mode": "agent" if use_agents else "standard"},
         structured_data={"version": __version__}
     )
-    
     # Create dashboard instance with appropriate configuration
     dashboard = Dashboard(
-        db_config=config.database,
+        db_config=db_config,
         llm_config=config.llm,
         app_config=config.app,
         agent_config=config.agent,

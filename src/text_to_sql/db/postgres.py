@@ -58,7 +58,7 @@ class PostgresDatabaseManager(DatabaseManager):
             db_params = {
                 'host': self.connection_params.get('host', 'localhost'),
                 'port': self.connection_params.get('port', 5432),
-                'dbname': self.connection_params.get('dbname', 'postgres'),
+                'dbname': self.connection_params.get('dbname', 'adventureworks'),
                 'user': self.connection_params.get('user', 'postgres'),
                 'password': self.connection_params.get('password', ''),
                 'sslmode': self.connection_params.get('sslmode', 'prefer')
@@ -207,6 +207,8 @@ class PostgresDatabaseManager(DatabaseManager):
         """
         
         results, error = self.execute_query(schema_query)
+
+        logger.info(f"Schema retrieved with {len(results)} tables")
         
         if error:
             logger.error(f"Error retrieving schema: {error}")

@@ -72,8 +72,12 @@ class Dashboard:
         # Initialize database manager
         db_type = self.db_config.type.lower()
         
-        if db_type == "postgres":
-            self.db_manager = PostgresDatabaseManager(self.db_config.get_connection_params())
+        db_manager_mapping = {
+            "postgres": PostgresDatabaseManager
+        }
+        
+        if db_type in db_manager_mapping:
+            self.db_manager = db_manager_mapping[db_type](self.db_config.get_connection_params())
         else:
             raise ValueError(f"Unsupported database type: {db_type}")
         

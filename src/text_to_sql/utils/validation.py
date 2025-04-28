@@ -62,7 +62,7 @@ def validate_postgres_connection() -> bool:
         # Get connection parameters from environment
         host = os.environ.get("TEXTTOSQL_DATABASE_HOST", "localhost")
         port = os.environ.get("TEXTTOSQL_DATABASE_PORT", "5432")
-        dbname = os.environ.get("TEXTTOSQL_DATABASE_DBNAME", "postgres")
+        dbname = os.environ.get("TEXTTOSQL_DATABASE_DBNAME", "adventureworks")
         user = os.environ.get("TEXTTOSQL_DATABASE_USER", "postgres")
         password = os.environ.get("TEXTTOSQL_DATABASE_PASSWORD", "")
         

@@ -252,17 +252,17 @@ class LLMSchemaAnalysisAgent(SchemaAnalysisAgent):
         
         # Create the prompt
         prompt = f"""You are an expert database analyst.
-Identify the tables that are relevant to this query:
+            Identify the tables that are relevant to this query:
 
-Query: "{context.user_query}"
+            Query: "{context.user_query}"
 
-Database Schema:
-{schema_str}
+            Database Schema:
+            {schema_str}
 
-List only the table names (schema.table format) that are directly relevant to answering this query.
-Do not include tables that are not needed to answer the query.
+            List only the table names (schema.table format) that are directly relevant to answering this query.
+            Do not include tables that are not needed to answer the query.
 
-Relevant Tables:"""
+            Relevant Tables:"""
         
         response = self.llm_engine._call_llm(prompt)
         
@@ -321,17 +321,17 @@ Relevant Tables:"""
             
             # Create a prompt to identify relevant columns
             prompt = f"""You are an expert database analyst.
-Identify the columns from table {table_name} that are relevant to this query:
+                Identify the columns from table {table_name} that are relevant to this query:
 
-Query: "{context.user_query}"
+                Query: "{context.user_query}"
 
-Available columns in {table_name}:
-{', '.join(table_columns)}
+                Available columns in {table_name}:
+                {', '.join(table_columns)}
 
-List only the column names that are directly relevant to answering this query.
-Do not include columns that are not needed to answer the query.
+                List only the column names that are directly relevant to answering this query.
+                Do not include columns that are not needed to answer the query.
 
-Relevant Columns:"""
+                Relevant Columns:"""
             
             response = self.llm_engine._call_llm(prompt)
             

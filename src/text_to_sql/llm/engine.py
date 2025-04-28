@@ -52,11 +52,10 @@ class LLMEngine:
         self.max_tokens = max_tokens
         self.db_manager = db_manager
         
-        # Validate API key
-        if not openai.api_key:
-            logger.warning("OpenAI API key not set. Please set it using the api_key parameter or environment variable.")
-        
-        self.client = openai.OpenAI()
+        try:
+            self.client = openai.OpenAI()
+        except openai.OpenAIError as e:
+            logger.warning(f"Failed to initialize OpenAI client: {e}")
     
     def set_db_manager(self, db_manager: DatabaseManager):
         """

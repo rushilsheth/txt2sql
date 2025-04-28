@@ -16,7 +16,6 @@ services:
       - TEXTTOSQL_DATABASE_PORT=5432
       - TEXTTOSQL_DATABASE_USER=${TEXTTOSQL_DATABASE_USER}
       - TEXTTOSQL_DATABASE_PASSWORD=${TEXTTOSQL_DATABASE_PASSWORD}
-      - TEXTTOSQL_DATABASE_DBNAME=${TEXTTOSQL_DATABASE_DBNAME:-adventureworks}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       - db
@@ -28,7 +27,7 @@ services:
     environment:
       - POSTGRES_USER=${TEXTTOSQL_DATABASE_USER}
       - POSTGRES_PASSWORD=${TEXTTOSQL_DATABASE_PASSWORD}
-      - POSTGRES_DB=${TEXTTOSQL_DATABASE_DBNAME:-adventureworks}
+      - POSTGRES_DB=adventureworks
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./data:/data
@@ -49,7 +48,6 @@ services:
       - TEXTTOSQL_DATABASE_PORT=5432
       - TEXTTOSQL_DATABASE_USER=${TEXTTOSQL_DATABASE_USER}
       - TEXTTOSQL_DATABASE_PASSWORD=${TEXTTOSQL_DATABASE_PASSWORD}
-      - TEXTTOSQL_DATABASE_DBNAME=${TEXTTOSQL_DATABASE_DBNAME:-adventureworks}
     depends_on:
       db:
         condition: service_healthy
