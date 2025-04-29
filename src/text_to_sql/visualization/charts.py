@@ -36,16 +36,8 @@ def create_bar_chart(
         logger.info("Creating bar chart with x_column='%s', y_column='%s', color_column='%s'", 
                     x_column, y_column, color_column)
         
-        # Check if DataFrame is empty
-        if data.empty:
-            logger.error("The provided DataFrame is empty.")
-            raise ValueError("Provided DataFrame is empty.")
-        
-        # Verify required columns exist in the DataFrame
-        for col in [x_column, y_column]:
-            if col not in data.columns:
-                logger.error("Required column '%s' not found in DataFrame.", col)
-                raise ValueError(f"Required column '{col}' not found in DataFrame.")
+        # Validate the DataFrame
+        validate_dataframe(data, [x_column, y_column])
         
         logger.debug("Data head:\n%s", data.head())
         
