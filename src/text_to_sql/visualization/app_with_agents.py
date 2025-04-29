@@ -157,8 +157,8 @@ class AgentBasedTextToSQLApp:
                                     )
                                     
                                 with gr.Column(scale=1):
-                                    x_column = gr.Dropdown(label="X-Axis Column")
-                                    y_column = gr.Dropdown(label="Y-Axis Column")
+                                    x_column = gr.Dropdown(label="X-Axis Column", allow_custom_value=True)
+                                    y_column = gr.Dropdown(label="Y-Axis Column", allow_custom_value=True)
                                     
                                 with gr.Column(scale=1):
                                     color_column = gr.Dropdown(label="Color Column (optional)", allow_custom_value=True)
@@ -278,7 +278,7 @@ class AgentBasedTextToSQLApp:
         if not query.strip():
             return [
                 "", None, "", "Please enter a query.", 
-                [], [], [], "Table", "", {}, {}, None
+                gr.update(choices=[]), gr.update(choices=[]), gr.update(choices=[]), "Table", None
             ]
         
         try:
@@ -311,7 +311,7 @@ class AgentBasedTextToSQLApp:
             viz_suggestion = context.metadata.get("visualization", {})
             viz_type_suggestion = viz_suggestion.get("type", "Table")
             
-            # Format reasoning steps for debug mode
+            # Format reasoning steps for debug mode (omitted from outputs)
             reasoning = ""
             if self.debug_mode:
                 reasoning = "## Agent Reasoning Steps\n\n"
@@ -344,20 +344,27 @@ class AgentBasedTextToSQLApp:
                     elif viz_type_suggestion == "Heatmap":
                         viz_figure = create_heatmap(df, x_col, y_col)
             
-            return [
-                sql_query, 
-                df, 
-                explanation, 
-                status, 
-                columns, 
-                columns, 
-                ["None"] + columns, 
+            # Return outputs:
+            # 0: Generated SQL query string
+            # 1: DataFrame with results
+            # 2: Explanation text
+            # 3: Status message
+            # 4: x_axis dropdown update
+            # 5: y_axis dropdown update
+            # 6: color dropdown update
+            # 7: Visualization type string
+            # 8: Visualization figure
+            return (
+                sql_query,
+                df,
+                explanation,
+                status,
+                gr.update(choices=columns),
+                gr.update(choices=columns),
+                gr.update(choices=columns),
                 viz_type_suggestion,
-                reasoning if self.debug_mode else None,
-                info["execution_times"] if self.debug_mode else None,
-                context.__dict__ if self.debug_mode else None,
                 viz_figure
-            ]
+            )
             
         except Exception as e:
             logger.error(f"Error handling query: {e}", exc_info=True)
@@ -366,13 +373,10 @@ class AgentBasedTextToSQLApp:
                 None, 
                 "", 
                 f"❌ Error: {str(e)}", 
-                [], 
-                [], 
-                [], 
+                gr.update(choices=[]),
+                gr.update(choices=[]),
+                gr.update(choices=[]),
                 "Table",
-                "" if self.debug_mode else None,
-                {} if self.debug_mode else None,
-                {} if self.debug_mode else None,
                 None
             ]
     
@@ -499,6 +503,15 @@ class AgentBasedTextToSQLApp:
         if not y_column or y_column not in data.columns:
             return None
         
+        # Ensure color_column is a string and not a list
+        if isinstance(color_column, list):
+            # Filter out invalid values and ensure columns exist in the DataFrame
+            filtered = [c for c in color_column if isinstance(c, str) and c != "None" and c in data.columns]
+            if not filtered:
+                logger.warning("No valid columns found in color_column list. Setting color_column to None.")
+                color_column = None
+            else:
+                color_column = filtered[0]
         # Prepare color column
         if color_column == "None" or color_column not in data.columns:
             color_column = None
