@@ -312,7 +312,20 @@ class AgentBasedTextToSQLApp:
             viz_type_suggestion = viz_suggestion.get("type", "Table")
             
             # Format reasoning steps for debug mode (omitted from outputs)
-            # Add to history, etc.
+            reasoning = ""
+            if self.debug_mode:
+                reasoning = "## Agent Reasoning Steps\n\n"
+                reasoning += "\n".join([f"- {step}" for step in context.reasoning_steps])
+            
+            # Add to history
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            self.history.append({
+                "timestamp": timestamp,
+                "query": query,
+                "sql": sql_query,
+                "results": results,
+                "explanation": explanation
+            })
             
             # Create visualization if suggested
             viz_figure = None
