@@ -490,6 +490,12 @@ class AgentBasedTextToSQLApp:
         if not y_column or y_column not in data.columns:
             return None
         
+        # Ensure color_column is a string and not a list
+        if isinstance(color_column, list):
+            # Remove "None" if present and pick the first available valid column if any
+            filtered = [c for c in color_column if c != "None"]
+            color_column = filtered[0] if filtered else None
+
         # Prepare color column
         if color_column == "None" or color_column not in data.columns:
             color_column = None
