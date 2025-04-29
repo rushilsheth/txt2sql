@@ -505,10 +505,13 @@ class AgentBasedTextToSQLApp:
         
         # Ensure color_column is a string and not a list
         if isinstance(color_column, list):
-            # Remove "None" if present and pick the first available valid column if any
-            filtered = [c for c in color_column if c != "None"]
-            color_column = filtered[0] if filtered else None
-
+            # Filter out invalid values and ensure columns exist in the DataFrame
+            filtered = [c for c in color_column if isinstance(c, str) and c != "None" and c in data.columns]
+            if not filtered:
+                logger.warning("No valid columns found in color_column list. Setting color_column to None.")
+                color_column = None
+            else:
+                color_column = filtered[0]
         # Prepare color column
         if color_column == "None" or color_column not in data.columns:
             color_column = None
