@@ -13,7 +13,7 @@ from pathlib import Path
 
 import text_to_sql
 from text_to_sql import run_app
-from text_to_sql.config import load_config
+from text_to_sql.config import load_config, setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,12 @@ def parse_args():
         action="store_true",
         help="Enable debug mode"
     )
+
+    parser.add_argument(
+        "--router",
+        action="store_true",
+        help="Launch the Gradio UI for LLM routing of queries"
+    )
     
     parser.add_argument(
         "--version", 
@@ -68,6 +74,31 @@ def main():
         if args.debug:
             os.environ["TEXTTOSQL_APP_DEBUG_MODE"] = "true"
         
+        if args.router:
+            # Launch the router-enabled Gradio app.
+            from text_to_sql.visualization.app_router import RouterBasedTextToSQLApp
+            from text_to_sql.db.postgres import PostgresDatabaseManager
+            from text_to_sql.llm.engine import LLMEngine
+            
+            config = load_config(args.config)
+            setup_logging(config)
+            
+            # Instantiate your database manager and LLM engine.
+            db_manager = PostgresDatabaseManager(config.database)
+            llm_engine = LLMEngine(config.llm)
+            logger.info("setup db and llm in Router-Based Text-to-SQL App")
+            app_config = config.app
+            agent_config = config.agent
+            
+            app = RouterBasedTextToSQLApp(db_manager, llm_engine, agent_config, app_config, debug_mode=args.debug)
+            app.build_app()
+            app.launch(
+                server_name=config.app.host,
+                server_port=config.app.port,
+                share=config.app.share
+            )
+            return 0
+
         # Set dynamic coordinator if specified
         if args.dynamic:
             os.environ["TEXTTOSQL_AGENT_USE_DYNAMIC_COORDINATOR"] = "true"

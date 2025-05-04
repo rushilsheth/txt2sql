@@ -37,7 +37,7 @@ class Dashboard:
         use_semantic_engine: bool = True,
         debug_mode: bool = False,
         app_config: Optional[Union[Dict[str, Any], AppConfig]] = None,
-        agent_config: Optional[Union[Dict[str, Any], AgentConfig]] = None
+        agent_config: AgentConfig = AgentConfig()
     ):
         """
         Initialize the dashboard.
@@ -106,7 +106,7 @@ class Dashboard:
             self.app = AgentBasedTextToSQLApp(
                 db_manager=self.db_manager,
                 llm_engine=self.llm_engine,
-                agent_config=self.agent_config.to_dict(),
+                agent_config=self.agent_config,
                 debug_mode=self.debug_mode,
                 app_config=self.app_config
             )
@@ -129,7 +129,7 @@ class Dashboard:
                 llm_engine=self.llm_engine,
                 semantic_engine=self.semantic_engine,
                 debug_mode=self.debug_mode,
-                theme=self.app_config.theme
+                app_config=self.app_config
             )
         
         # Build the app interface

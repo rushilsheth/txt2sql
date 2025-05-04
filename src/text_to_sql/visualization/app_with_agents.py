@@ -25,7 +25,7 @@ from text_to_sql.visualization.charts import (
     create_scatter_plot,
     create_heatmap
 )
-from text_to_sql.utils.config_types import AppConfig  # ...added
+from text_to_sql.utils.config_types import AgentConfig, AppConfig
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class AgentBasedTextToSQLApp:
         self,
         db_manager: DatabaseManager,
         llm_engine: LLMEngine,
-        agent_config: Dict[str, Any] = None,
+        agent_config: AgentConfig,
         app_config: Optional[Union[Dict[str, Any], AppConfig]] = None,  # ...added
         debug_mode: bool = False
     ):

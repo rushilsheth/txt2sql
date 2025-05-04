@@ -37,6 +37,10 @@ setup-db: | start-db        # order-only prerequisite
 	$(PYTHON) src/text_to_sql/scripts/setup_db.py --config $(CONFIG_FILE)
 	@echo "Database setup complete"
 
+router:
+	@echo "Running the application WITH ROUTER..."
+	$(PYTHON) -m text_to_sql --router --config $(CONFIG_FILE)
+
 # Run the application
 run:
 	@echo "Running the application..."

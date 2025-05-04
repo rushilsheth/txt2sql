@@ -36,7 +36,7 @@ class TestLLMEngine(unittest.TestCase):
         mock_openai.return_value = mock_response
         
         # Generate SQL
-        sql, confidence, metadata = self.llm_engine.generate_sql("Show me all users")
+        sql, confidence, metadata = self.llm_engine.generate_sql_no_agents("Show me all users")
         
         # Check the results
         self.assertEqual(sql, "SELECT * FROM users")
@@ -61,7 +61,7 @@ class TestLLMEngine(unittest.TestCase):
         self.mock_db_manager.validate_query.return_value = (False, "Table does not exist")
         
         # Generate SQL
-        sql, confidence, metadata = self.llm_engine.generate_sql("Show me all data from nonexistent table")
+        sql, confidence, metadata = self.llm_engine.generate_sql_no_agents("Show me all data from nonexistent table")
         
         # Check the results
         self.assertEqual(sql, "SELECT * FROM nonexistent_table")

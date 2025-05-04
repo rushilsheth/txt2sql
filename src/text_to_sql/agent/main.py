@@ -21,6 +21,7 @@ from text_to_sql.agent.dynamic_coordinator import DynamicCoordinatorAgent
 from text_to_sql.agent.types import AgentContext
 from text_to_sql.db.base import DatabaseManager
 from text_to_sql.llm.engine import LLMEngine
+from text_to_sql.utils.config_types import AgentConfig
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class TextToSQLAgent:
         self,
         db_manager: DatabaseManager,
         llm_engine: LLMEngine,
-        config: Dict[str, Any] = None
+        config: AgentConfig
     ):
         """
         Initialize the text-to-SQL agent system.
@@ -49,56 +50,57 @@ class TextToSQLAgent:
         """
         self.db_manager = db_manager
         self.llm_engine = llm_engine
-        self.config = config or {}
+        logger.info(f"Initializing TextToSQLAgent with {config}")
+        self.config = config or AgentConfig(**config)
         
         # Create agents
         self.query_understanding_agent = LLMQueryUnderstandingAgent(
             llm_engine=llm_engine,
-            config=self.config.get("query_understanding", {})
+            config=self.config.query_understanding
         )
         
         self.schema_analysis_agent = LLMSchemaAnalysisAgent(
             llm_engine=llm_engine,
             db_manager=db_manager,
-            config=self.config.get("schema_analysis", {})
+            config=self.config.schema_analysis
         )
         
         self.sql_generation_agent = LLMSQLGenerationAgent(
             llm_engine=llm_engine,
             db_manager=db_manager,
-            config=self.config.get("sql_generation", {})
+            config=self.config.sql_generation
         )
         
         self.query_validation_agent = LLMQueryValidationAgent(
             llm_engine=llm_engine,
             db_manager=db_manager,
-            config=self.config.get("query_validation", {})
+            config=self.config.query_validation
         )
         
         self.result_explanation_agent = LLMResultExplanationAgent(
             llm_engine=llm_engine,
-            config=self.config.get("result_explanation", {})
+            config=self.config.result_explanation
         )
         
         self.visualization_agent = LLMVisualizationAgent(
             llm_engine=llm_engine,
-            config=self.config.get("visualization", {})
+            config=self.config.visualization
         )
         
         # Determine which coordinator to use
-        use_dynamic_coordinator = self.config.get("use_dynamic_coordinator", False)
+        use_dynamic_coordinator = self.config.use_dynamic_coordinator
         
         if use_dynamic_coordinator:
             # Create dynamic coordinator
             self.coordinator = DynamicCoordinatorAgent(
                 llm_engine=llm_engine,
-                config=self.config.get("coordinator", {})
+                config=self.configcoordinator
             )
             logger.info("Using dynamic coordinator agent")
         else:
             # Create simple coordinator
             self.coordinator = SimpleCoordinatorAgent(
-                config=self.config.get("coordinator", {})
+                config=self.config.coordinator
             )
             logger.info("Using simple coordinator agent")
         
@@ -127,7 +129,7 @@ class TextToSQLAgent:
         # Create context
         context = AgentContext(
             user_query=query,
-            max_iterations=self.config.get("max_iterations", 5)
+            max_iterations=self.config.max_iterations
         )
         
         # Process through coordinator
@@ -153,7 +155,7 @@ class TextToSQLAgent:
                 logger.error(f"Error executing query: {error}")
                 
                 # Try to fix the query if there's an error
-                if self.config.get("auto_fix_errors", True):
+                if self.config.auto_fix_errors:
                     logger.info("Attempting to fix the query")
                     
                     # Update context with the error
@@ -204,7 +206,7 @@ class TextToSQLAgent:
 def create_text_to_sql_agent(
     db_manager: DatabaseManager,
     llm_engine: LLMEngine,
-    config: Dict[str, Any] = None
+    config: AgentConfig
 ) -> TextToSQLAgent:
     """
     Create a text-to-SQL agent.
@@ -212,7 +214,7 @@ def create_text_to_sql_agent(
     Args:
         db_manager: Database manager instance
         llm_engine: LLM engine instance
-        config: Configuration dictionary
+        config: Configuration object
         
     Returns:
         TextToSQLAgent instance

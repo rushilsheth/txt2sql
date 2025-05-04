@@ -66,7 +66,7 @@ class LLMEngine:
         """
         self.db_manager = db_manager
     
-    def generate_sql(self, query: str) -> Tuple[str, float, Dict[str, Any]]:
+    def generate_sql_no_agents(self, query: str) -> Tuple[str, float, Dict[str, Any]]:
         """
         Generate an SQL query from a natural language question.
         
@@ -79,15 +79,19 @@ class LLMEngine:
             - Confidence score (0-1)
             - Additional metadata about the generation
         """
+        logger.info("Calling generate_sql in LLM ENGINE")
         if not self.db_manager:
             raise ValueError("Database manager not set. Please set it before generating SQL.")
         
+        logger.info("getting schema")
         # Get database schema
         schema = self.db_manager.get_schema()
         
+        logger.info("formatting schema")
         # Format the schema for the prompt
         schema_str = self._format_schema_for_prompt(schema)
         
+        logger.info("creating prompt")
         # Create the prompt
         prompt = SQL_GENERATION_PROMPT.format(
             question=query,
@@ -95,12 +99,14 @@ class LLMEngine:
             db_type=self.db_manager.get_database_type(),
         )
         
+        logger.info("calling llm")
         # Call the LLM
         start_time = time.time()
         response = self.call_llm(prompt, json_response=True)
         generation_time = time.time() - start_time
         
         # Extract the SQL query from the response
+        logger.info(f"LLM response {response}")
         sql_query = self._extract_sql_from_response(response)
         
         # Validate the query
