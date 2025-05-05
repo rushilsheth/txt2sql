@@ -250,7 +250,7 @@ class TextToSQLApp:
                 query_plan = self.semantic_engine.generate_semantic_query_plan(query)
             
             # Generate SQL query
-            sql_query, confidence, metadata = self.llm_engine.generate_sql(query)
+            sql_query, confidence, metadata = self.llm_engine.generate_sql_no_agents(query)
             
             # Format the status message
             generation_time = time.time() - start_time
@@ -317,7 +317,7 @@ class TextToSQLApp:
             return df, status, columns, columns, ["None"] + columns
             
         except Exception as e:
-            logger.error(f"Error executing query: {e}")
+            logger.error(f"Error executing query in: {e}")
             return None, f"❌ Error: {str(e)}", [], [], []
     
     def clear_results(self) -> Tuple[None, str, str, None]:

@@ -70,18 +70,22 @@ class AgentBasedTextToSQLApp:
         self.theme = self.app_config.theme or gr.themes.Base()
         self.debug_mode = debug_mode
         
+        logger.info("before create_text_to_sql_agent")
         # Create the text-to-SQL agent
         self.agent = create_text_to_sql_agent(
             db_manager=db_manager,
             llm_engine=llm_engine,
             config=self.agent_config
         )
+        logger.info("after create_text_to_sql_agent")
         
         # Initialize history
         self.history = []
         
         # Build the app
         self.app = None
+
+        logger.info("created AgentBasedTextToSQLApp instance")
     
     def build_app(self):
         """Build the Gradio application interface."""

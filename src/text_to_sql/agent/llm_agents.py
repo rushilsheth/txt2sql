@@ -49,6 +49,7 @@ class LLMQueryUnderstandingAgent(QueryUnderstandingAgent):
         """
         super().__init__(name, config)
         self.llm_engine = llm_engine
+        logger.info("Created LLMQueryUnderstandingAgent")
     
     def process(self, context: AgentContext) -> AgentContext:
         """

@@ -21,15 +21,10 @@ Database Type: {db_type}
 4. Handle NULL values appropriately.
 5. Use clear aliases for tables and columns when needed.
 6. For aggregate queries, include appropriate GROUP BY clauses.
-7. Wrap the final SQL in a ```sql code block.
+7. Respond with a JSON: {{'sql': 'your_sql_query_here'}}
 
 ## Natural Language Question
 {question}
-
-## SQL Query
-Based on the database schema and natural language question, respond with the SQL query that answers the question in a JSON format.
-
-The json should contain: {'sql': 'your_sql_query_here'}
 """
 
 # Prompt for validating and repairing SQL

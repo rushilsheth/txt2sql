@@ -83,20 +83,35 @@ def main():
             config = load_config(args.config)
             setup_logging(config)
             
-            # Instantiate your database manager and LLM engine.
-            db_manager = PostgresDatabaseManager(config.database)
-            llm_engine = LLMEngine(config.llm)
-            logger.info("setup db and llm in Router-Based Text-to-SQL App")
+            # Instantiate your database manager
+            logger.info(f"db config: {config.database}")
+            db_manager = PostgresDatabaseManager(config.database.get_connection_params())
+            logger.info("created db manager")
+            llm_config = config.llm
+            if not db_manager.connect():
+                logger.error("Failed to connect to the database.")
+                sys.exit(1)
+            llm_engine = LLMEngine(model=llm_config.model,
+                        api_key=llm_config.api_key,
+                        temperature=llm_config.temperature,
+                        timeout=llm_config.timeout,
+                        max_tokens=llm_config.max_tokens,
+                        db_manager=db_manager)
+            logger.info("created llm config")
+            
             app_config = config.app
             agent_config = config.agent
-            
+            logger.info(f"DB manager {db_manager}")
             app = RouterBasedTextToSQLApp(db_manager, llm_engine, agent_config, app_config, debug_mode=args.debug)
+            logger.info("created RouterBasedTextToSQLApp")
             app.build_app()
+            logger.info("RouterBasedTextToSQLApp built")
             app.launch(
                 server_name=config.app.host,
                 server_port=config.app.port,
                 share=config.app.share
             )
+            logger.info("launch RouterBasedTextToSQLApp")
             return 0
 
         # Set dynamic coordinator if specified

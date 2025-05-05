@@ -50,7 +50,6 @@ class TextToSQLAgent:
         """
         self.db_manager = db_manager
         self.llm_engine = llm_engine
-        logger.info(f"Initializing TextToSQLAgent with {config}")
         self.config = config or AgentConfig(**config)
         
         # Create agents
@@ -58,34 +57,40 @@ class TextToSQLAgent:
             llm_engine=llm_engine,
             config=self.config.query_understanding
         )
+        logger.info("Created LLMQueryUnderstandingAgent")
         
         self.schema_analysis_agent = LLMSchemaAnalysisAgent(
             llm_engine=llm_engine,
             db_manager=db_manager,
             config=self.config.schema_analysis
         )
+        logger.info("Created LLMSchemaAnalysisAgent")
         
         self.sql_generation_agent = LLMSQLGenerationAgent(
             llm_engine=llm_engine,
             db_manager=db_manager,
             config=self.config.sql_generation
         )
+        logger.info("Created LLMSQLGenerationAgent")
         
         self.query_validation_agent = LLMQueryValidationAgent(
             llm_engine=llm_engine,
             db_manager=db_manager,
             config=self.config.query_validation
         )
+        logger.info("Created LLMQueryValidationAgent")
         
         self.result_explanation_agent = LLMResultExplanationAgent(
             llm_engine=llm_engine,
             config=self.config.result_explanation
         )
+        logger.info("Created LLMResultExplanationAgent")
         
         self.visualization_agent = LLMVisualizationAgent(
             llm_engine=llm_engine,
             config=self.config.visualization
         )
+        logger.info("Created LLMVisualizationAgent")
         
         # Determine which coordinator to use
         use_dynamic_coordinator = self.config.use_dynamic_coordinator
@@ -96,13 +101,11 @@ class TextToSQLAgent:
                 llm_engine=llm_engine,
                 config=self.configcoordinator
             )
-            logger.info("Using dynamic coordinator agent")
         else:
             # Create simple coordinator
             self.coordinator = SimpleCoordinatorAgent(
                 config=self.config.coordinator
             )
-            logger.info("Using simple coordinator agent")
         
         # Add agents to coordinator
         self.coordinator.add_agent(self.query_understanding_agent)
@@ -124,7 +127,6 @@ class TextToSQLAgent:
             - Agent context with processing results
             - Dictionary with additional info (e.g., timing)
         """
-        logger.info(f"Processing query: {query}")
         
         # Create context
         context = AgentContext(
@@ -139,8 +141,6 @@ class TextToSQLAgent:
         
         # If we have a valid SQL query, execute it
         if context.sql_query and not context.result_error:
-            logger.info(f"Executing SQL query: {context.sql_query}")
-            
             # Execute the query
             start_time = time.time()
             results, error = self.db_manager.execute_query(context.sql_query, context.sql_params)
